@@ -68,6 +68,26 @@ class SimpleCalculatorTest {
     }
 
     @Test
+    @DisplayName("Eval good caret expression")
+    void evalGoodCaretExpression() throws ExpressionParseException, EvalException {
+        final var expected = new BigDecimal(-27);
+        final var str = "-3 ^ 3";
+
+        final var got = calculator.calculate(str);
+        Assertions.assertEquals(expected, got);
+    }
+
+    @Test
+    @DisplayName("Eval good complex expression")
+    void evalGoodComplexExpression() throws ExpressionParseException, EvalException {
+        final var expected = new BigDecimal(317);
+        final var str = "-3 +5 * 8 ^ 2";
+
+        final var got = calculator.calculate(str);
+        Assertions.assertEquals(expected, got);
+    }
+
+    @Test
     @DisplayName("Invalid token")
     void invalidToken() {
         final var str = "+3 - 4a";

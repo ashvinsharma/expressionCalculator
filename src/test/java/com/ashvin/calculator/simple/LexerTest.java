@@ -92,4 +92,15 @@ class LexerTest {
         final var str = "3a + 5a";
         Assertions.assertThrows(IllegalTokenException.class, () -> lexer.tokenize(str));
     }
+
+    @Test
+    void goodCaret() {
+        final var str = "3 ^ 2";
+        final var expected = List.of(
+                new Lexeme(TokenType.NUMBER, "3"),
+                new Lexeme(TokenType.CARET),
+                new Lexeme(TokenType.NUMBER, "2")
+        );
+        tokenizeTest(str, expected);
+    }
 }

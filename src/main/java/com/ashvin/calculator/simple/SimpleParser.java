@@ -5,9 +5,11 @@ import com.ashvin.calculator.entity.AbstractSyntaxTree;
 import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.ExpressionParseException;
+import com.ashvin.calculator.exception.IllegalTokenException;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,20 +17,28 @@ import java.util.stream.Collectors;
 public class SimpleParser implements Parser {
     @Override
     public AbstractSyntaxTree parse(List<Lexeme> lexemes) throws ExpressionParseException {
-        var tokens = lexemes
+        final var tokens = lexemes
                 .stream()
                 .map(TokenWrapper::new)
                 .collect(Collectors.toList());
-        tokens = processUnaryOperators(tokens, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
-        tokens = processBinaryOperators(tokens, EnumSet.of(TokenType.ASTERISK, TokenType.SLASH));
-        tokens = processBinaryOperators(tokens, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
+        processUnaryOperators(tokens, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
+
+        EnumSet.allOf(TokenType.class)
+                .stream()
+                .filter(x -> x.tokenClass.numOperands == 2)
+                .sorted((o1, o2) -> o2.tokenClass.priority - o1.tokenClass.priority)
+                .collect(
+                        Collectors.groupingBy((x -> x.tokenClass.priority),
+                                LinkedHashMap::new,
+                                Collectors.toSet()))
+                .forEach((key, val) -> processBinaryOperators(tokens, val));
 
         if (tokens.size() != 1) throw new ExpressionParseException("Failed to parse all or some parts of expression");
-        var wrapper = tokens.get(0);
+        final var wrapper = tokens.get(0);
         return wrapper.getNode();
     }
 
-    private List<TokenWrapper> processBinaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+    private void processBinaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
             throws ExpressionParseException {
         final var result = new ArrayList<TokenWrapper>();
         AbstractSyntaxTree node = null;
@@ -94,10 +104,11 @@ public class SimpleParser implements Parser {
             result.add(new TokenWrapper(node));
         }
 
-        return result;
+        tokens.clear();
+        tokens.addAll(result);
     }
 
-    private List<TokenWrapper> processUnaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+    private void processUnaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
             throws ExpressionParseException {
         final var result = new ArrayList<TokenWrapper>();
 
@@ -146,7 +157,8 @@ public class SimpleParser implements Parser {
 
             i++;
         }
-        return result;
+        tokens.clear();
+        tokens.addAll(result);
     }
 
     private static class TokenWrapper {

@@ -1,6 +1,6 @@
 package com.ashvin.calculator.exception;
 
-public class ExpressionParseException extends Exception {
+public class ExpressionParseException extends RuntimeException {
     public ExpressionParseException() {
     }
 
