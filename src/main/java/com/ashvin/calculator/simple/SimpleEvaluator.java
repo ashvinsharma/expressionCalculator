@@ -34,19 +34,6 @@ public class SimpleEvaluator implements Evaluator {
     private BigDecimal evaluate(BigDecimal left, Lexeme lexeme, BigDecimal right) {
         // if left is null, right is guaranteed to be null
         // so only check for right
-        return switch (lexeme.getType()) {
-            case PLUS -> right == null ? left : left.add(right);
-            case MINUS -> right == null ? left.negate() : left.subtract(right);
-            case ASTERISK -> left.multiply(right);
-            case SLASH -> {
-                try {
-                    // noinspection BigDecimalMethodWithoutRoundingCalled
-                    yield left.divide(right);
-                } catch (ArithmeticException e) {
-                    yield BigDecimal.valueOf(left.doubleValue() / right.doubleValue());
-                }
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + lexeme.getType());
-        };
+        return lexeme.eval(left, right);
     }
 }

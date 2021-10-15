@@ -1,5 +1,6 @@
 package com.ashvin.calculator.entity;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Lexeme {
@@ -43,6 +44,10 @@ public class Lexeme {
     @Override
     public String toString() {
         return "Lexeme{type=%s, value='%s'}".formatted(type, value);
+    }
+
+    public BigDecimal eval(BigDecimal left, BigDecimal right) {
+        return this.type.eval(left, right);
     }
 }
 
