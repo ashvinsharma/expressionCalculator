@@ -48,6 +48,17 @@ class ParserTest {
         Assertions.assertEquals(expect, got);
     }
 
+    @Test
+    @DisplayName("Simple parenthesised expression")
+    void simpleParenthesisedExp() throws ExpressionParseException {
+        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "5"));
+        final var str = "(5)";
+        final var lexemes = lexer.tokenize(str);
+        final var got = parser.parse(lexemes);
+
+        Assertions.assertEquals(expect, got);
+    }
+
 
     @Test
     @DisplayName("Parse simple unary expression")

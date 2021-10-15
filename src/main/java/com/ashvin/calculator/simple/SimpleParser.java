@@ -6,13 +6,10 @@ import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.ExpressionParseException;
 
-import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,11 +24,21 @@ public class SimpleParser implements Parser {
                 .map(TokenWrapper::new)
                 .collect(Collectors.toList());
 
+        parseTokens(tokens);
+        if (tokens.size() != 1) throw new ExpressionParseException("Failed to parse all or some parts of expression");
+        final var wrapper = tokens.get(0);
+
+        return wrapper.getNode();
+    }
+
+    private List<TokenWrapper> parseTokens(List<TokenWrapper> tokens) {
+        processParens(tokens);
+
         processUnaryOperators(tokens, EnumSet.allOf(TokenType.class)
                 .stream()
                 .filter(x -> x != TokenType.NUMBER)
-                .filter(x -> x.tokenClass.numOperands == 1)
-                .collect(Collectors.toMap(x -> x.tokenClass.symbol, Function.identity())));
+                .filter(x -> x.getTokenClass().getNumOperands() == 1)
+                .collect(Collectors.toMap(x -> x.getTokenClass().getSymbol(), Function.identity())));
 
 //        filter binary operators then sort then group them by priority in a set
 //        20 -> [ASTERISK, SLASH]
@@ -39,17 +46,65 @@ public class SimpleParser implements Parser {
 //        then process
         EnumSet.allOf(TokenType.class)
                 .stream()
-                .filter(x -> x.tokenClass.numOperands == 2)
+                .filter(x -> x.getTokenClass().getNumOperands() == 2)
                 .sorted((o1, o2) -> o2.compare(o1))
                 .collect(
-                        Collectors.groupingBy((x -> x.tokenClass.priority),
+                        Collectors.groupingBy((x -> x.getTokenClass().getPriority()),
                                 LinkedHashMap::new,
                                 Collectors.toSet()))
                 .forEach((key, val) -> processBinaryOperators(tokens, val));
 
-        if (tokens.size() != 1) throw new ExpressionParseException("Failed to parse all or some parts of expression");
-        final var wrapper = tokens.get(0);
-        return wrapper.getNode();
+        return tokens;
+    }
+
+    // recursively solves inner parenthesised expression first
+    // 1 + 9 * 8 + ( 8 * 9 + ( 8 / 1 ))
+    // 8 * 9 + ( 8 / 1 )
+    // 8 / 1
+    private void processParens(List<TokenWrapper> tokens) {
+        final var tmp = new ArrayList<TokenWrapper>(tokens.size() * 2);
+        for (int i = 0; i < tokens.size(); i++) {
+            final var token = tokens.get(i);
+            if (!token.isLexeme()) {
+                tmp.add(token);
+                continue;
+            }
+            if (token.getLexeme().getType().equals(TokenType.OPEN_PARENS)) {
+                final var idx = findMatchingParen(tokens, i);
+                tmp.addAll(parseTokens(new ArrayList<>(tokens.subList(i + 1, idx))));
+                i = idx;
+            } else {
+                tmp.add(token);
+            }
+        }
+        tokens.clear();
+        tokens.addAll(tmp);
+    }
+
+    /**
+     * Returns idx of matching parens
+     *
+     * @param tokens - list of {@link TokenWrapper}
+     * @param idx - index of the matching closing parenthesis
+     */
+    private int findMatchingParen(List<TokenWrapper> tokens, int idx) {
+        if (!tokens.get(idx).isLexeme())
+            throw new IllegalArgumentException("Token at idx %s is not Lexeme".formatted(idx));
+        if (tokens.get(idx).getLexeme().getType() != TokenType.OPEN_PARENS)
+            throw new IllegalArgumentException("Token at idx %s is not open parenthesis".formatted(idx));
+
+        var stack = new ArrayDeque<TokenWrapper>(tokens.size());
+        for (int i = idx + 1; i < tokens.size(); i++) {
+            final var token = tokens.get(i);
+            final var lexeme = token.getLexeme();
+            if (lexeme.getType().equals(TokenType.OPEN_PARENS)) {
+                stack.addFirst(token);
+            } else if (lexeme.getType().equals(TokenType.CLOSE_PARENS)) {
+                if (stack.isEmpty()) return i;
+                else stack.poll();
+            }
+        }
+        throw new IllegalArgumentException("No matching parenthesis found");
     }
 
     private void processBinaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
@@ -135,7 +190,7 @@ public class SimpleParser implements Parser {
             }
 
             final var lexeme = current.getLexeme();
-            if (!types.containsKey(lexeme.getType().tokenClass.symbol)) {
+            if (!types.containsKey(lexeme.getType().getTokenClass().getSymbol())) {
                 result.add(current);
                 continue;
             }
@@ -164,7 +219,7 @@ public class SimpleParser implements Parser {
                         throw new ExpressionParseException("Expected a number");
                 }
 
-                final var newLexeme = new Lexeme(types.get(lexeme.getType().tokenClass.symbol));
+                final var newLexeme = new Lexeme(types.get(lexeme.getType().getTokenClass().getSymbol()));
                 var node = new AbstractSyntaxTree(newLexeme, next.getNode(), null);
                 result.add(new TokenWrapper(node));
             } catch (IndexOutOfBoundsException e) {

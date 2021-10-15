@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 import static java.lang.String.format;
 
 public abstract class TokenClass implements Token, Comparable<TokenClass> {
-    public int priority;
-    public int numOperands;
-    public char symbol;
+    private final int priority;
+    private final int numOperands;
+    private final char symbol;
 
     public TokenClass(int priority, int numOperands, char symbol) {
         this.priority = priority;
@@ -26,6 +26,18 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
     @Override
     public int compareTo(TokenClass o) {
         return this.priority - o.priority;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public int getNumOperands() {
+        return numOperands;
+    }
+
+    public char getSymbol() {
+        return symbol;
     }
 
     static class Number extends TokenClass implements Token {
@@ -50,7 +62,7 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
             super.validate(bigDecimals);
             final var left = bigDecimals[0];
             // return if this is unary plus
-            if (numOperands == 1) return left;
+            if (super.getNumOperands() == 1) return left;
             final var right = bigDecimals[1];
             return right == null ? left : left.add(right);
         }
@@ -66,7 +78,7 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
             super.validate(bigDecimals);
             final var left = bigDecimals[0];
             // return if this is unary minus
-            if (numOperands == 1) return left.negate();
+            if (super.getNumOperands() == 1) return left.negate();
             final var right = bigDecimals[1];
             return right == null ? left.negate() : left.subtract(right);
         }
@@ -100,6 +112,17 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
                 throw new IllegalStateException("Unexpected value: " + right);
             //noinspection BigDecimalMethodWithoutRoundingCalled
             return left.divide(right);
+        }
+    }
+
+    static class Parenthesis extends TokenClass implements Token {
+        public Parenthesis(char symbol) {
+            super(Integer.MAX_VALUE, 0, symbol);
+        }
+
+        @Override
+        public BigDecimal eval(final BigDecimal... bigDecimals) {
+            throw new IllegalStateException("Parenthesis can't be eval'd!");
         }
     }
 

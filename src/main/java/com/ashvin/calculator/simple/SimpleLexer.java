@@ -33,7 +33,7 @@ public class SimpleLexer implements Lexer {
             final var lexeme = EnumSet
                     .allOf(TokenType.class)
                     .stream()
-                    .filter(x -> x.tokenClass.symbol == curr)
+                    .filter(x -> x.getTokenClass().getSymbol() == curr)
                     .findFirst()
                     .map(Lexeme::new)
                     .orElseThrow(() -> new IllegalTokenException(curr));
