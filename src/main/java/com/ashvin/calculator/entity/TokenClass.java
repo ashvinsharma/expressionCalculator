@@ -2,7 +2,9 @@ package com.ashvin.calculator.entity;
 
 import java.math.BigDecimal;
 
-public abstract class TokenClass implements Token {
+import static java.lang.String.format;
+
+public abstract class TokenClass implements Token, Comparable<TokenClass> {
     public int priority;
     public int numOperands;
     public char symbol;
@@ -12,10 +14,18 @@ public abstract class TokenClass implements Token {
         this.numOperands = numOperands;
         this.symbol = symbol;
     }
+
     public void validate(BigDecimal... bigDecimals) {
         if (bigDecimals.length != numOperands) {
-            throw new IllegalArgumentException(String.format("Only %s arguments needed", numOperands));
+            throw new IllegalArgumentException(
+                    format("Only %s arguments needed, got %s", numOperands, bigDecimals.length)
+            );
         }
+    }
+
+    @Override
+    public int compareTo(TokenClass o) {
+        return this.priority - o.priority;
     }
 
     static class Number extends TokenClass implements Token {
@@ -39,6 +49,8 @@ public abstract class TokenClass implements Token {
         public BigDecimal eval(final BigDecimal... bigDecimals) {
             super.validate(bigDecimals);
             final var left = bigDecimals[0];
+            // return if this is unary plus
+            if (numOperands == 1) return left;
             final var right = bigDecimals[1];
             return right == null ? left : left.add(right);
         }
@@ -53,6 +65,8 @@ public abstract class TokenClass implements Token {
         public BigDecimal eval(final BigDecimal... bigDecimals) {
             super.validate(bigDecimals);
             final var left = bigDecimals[0];
+            // return if this is unary minus
+            if (numOperands == 1) return left.negate();
             final var right = bigDecimals[1];
             return right == null ? left.negate() : left.subtract(right);
         }
@@ -104,3 +118,4 @@ public abstract class TokenClass implements Token {
         }
     }
 }
+

@@ -21,7 +21,7 @@ public class SimpleEvaluator implements Evaluator {
 
             return lexeme.eval(left, right);
         } catch (Exception e) {
-            throw new EvalException("Evaluation of expression failed");
+            throw new EvalException(e);
         }
     }
 }

@@ -47,6 +47,7 @@ public class Lexeme {
     }
 
     public BigDecimal eval(BigDecimal left, BigDecimal right) {
+        if (right == null) return this.type.eval(left);
         return this.type.eval(left, right);
     }
 }

@@ -38,7 +38,7 @@ class ParserTest {
     @Test
     @DisplayName("parsePlusBeforeNumber")
     void parsePlusBeforeNumber() throws ExpressionParseException {
-        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.PLUS),
+        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.U_PLUS),
                 new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3"))
                 , null);
         final var str = "+3";
@@ -52,7 +52,7 @@ class ParserTest {
     @Test
     @DisplayName("Parse simple unary expression")
     void parseSimpleUnaryExpression() throws ExpressionParseException {
-        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.MINUS),
+        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
                 new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3"))
                 , null);
         final var str = "-3";
@@ -87,7 +87,7 @@ class ParserTest {
     @DisplayName("Parse complex expression")
     void parseComplexExpression() throws ExpressionParseException {
         final var expected = new AbstractSyntaxTree(new Lexeme(TokenType.PLUS),
-                new AbstractSyntaxTree(new Lexeme(TokenType.MINUS),
+                new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
                         null
                 ), new AbstractSyntaxTree(new Lexeme(TokenType.SLASH),
@@ -95,7 +95,7 @@ class ParserTest {
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "5")),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "8"))
                 ),
-                new AbstractSyntaxTree(new Lexeme(TokenType.MINUS),
+                new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "2")),
                         null
                 )
