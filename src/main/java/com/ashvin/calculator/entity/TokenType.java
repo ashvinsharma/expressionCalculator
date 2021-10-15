@@ -12,7 +12,9 @@ import java.math.BigDecimal;
 public enum TokenType {
     NUMBER(new Number(Integer.MAX_VALUE, 1, 'x')),
     PLUS(new Plus(10, 2, '+')),
+    U_PLUS(new Plus(100, 1, '+')),
     MINUS(new Minus(10, 2, '-')),
+    U_MINUS(new Minus(100, 1, '-')),
     ASTERISK(new Asterisk(20, 2, '*')),
     SLASH(new Slash(20, 2, '/')),
     CARET(new Caret(30, 2, '^'));
@@ -25,6 +27,10 @@ public enum TokenType {
 
     BigDecimal eval(BigDecimal... operands) {
         return tokenClass.eval(operands);
+    }
+
+    public int compare(TokenType that) {
+        return this.tokenClass.compareTo(that.tokenClass);
     }
 }
 

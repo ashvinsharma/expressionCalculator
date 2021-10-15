@@ -5,13 +5,18 @@ import com.ashvin.calculator.entity.AbstractSyntaxTree;
 import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.ExpressionParseException;
-import com.ashvin.calculator.exception.IllegalTokenException;
 
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SimpleParser implements Parser {
@@ -21,12 +26,21 @@ public class SimpleParser implements Parser {
                 .stream()
                 .map(TokenWrapper::new)
                 .collect(Collectors.toList());
-        processUnaryOperators(tokens, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
 
+        processUnaryOperators(tokens, EnumSet.allOf(TokenType.class)
+                .stream()
+                .filter(x -> x != TokenType.NUMBER)
+                .filter(x -> x.tokenClass.numOperands == 1)
+                .collect(Collectors.toMap(x -> x.tokenClass.symbol, Function.identity())));
+
+//        filter binary operators then sort then group them by priority in a set
+//        20 -> [ASTERISK, SLASH]
+//        10 -> [PLUS, MINUS]
+//        then process
         EnumSet.allOf(TokenType.class)
                 .stream()
                 .filter(x -> x.tokenClass.numOperands == 2)
-                .sorted((o1, o2) -> o2.tokenClass.priority - o1.tokenClass.priority)
+                .sorted((o1, o2) -> o2.compare(o1))
                 .collect(
                         Collectors.groupingBy((x -> x.tokenClass.priority),
                                 LinkedHashMap::new,
@@ -108,21 +122,21 @@ public class SimpleParser implements Parser {
         tokens.addAll(result);
     }
 
-    private void processUnaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+    private void processUnaryOperators(List<TokenWrapper> tokens, Map<Character, TokenType> types)
             throws ExpressionParseException {
         final var result = new ArrayList<TokenWrapper>();
 
         for (int i = 0; i < tokens.size(); i++) {
-            var wrapper = tokens.get(i);
+            final var current = tokens.get(i);
             // dont touch AST
-            if (!wrapper.isLexeme()) {
-                result.add(wrapper);
+            if (!current.isLexeme()) {
+                result.add(current);
                 continue;
             }
 
-            final var lexeme = wrapper.getLexeme();
-            if (!types.contains(lexeme.getType())) {
-                result.add(wrapper);
+            final var lexeme = current.getLexeme();
+            if (!types.containsKey(lexeme.getType().tokenClass.symbol)) {
+                result.add(current);
                 continue;
             }
 
@@ -132,11 +146,11 @@ public class SimpleParser implements Parser {
                 if (prev.isLexeme()) {
                     final var prevLexeme = prev.getLexeme();
                     if (prevLexeme.getType() == TokenType.NUMBER) {
-                        result.add(wrapper);
+                        result.add(current);
                         continue;
                     }
                 } else {
-                    result.add(wrapper);
+                    result.add(current);
                     continue;
                 }
             }
@@ -149,7 +163,9 @@ public class SimpleParser implements Parser {
                     if (nextLexeme.getType() != TokenType.NUMBER)
                         throw new ExpressionParseException("Expected a number");
                 }
-                var node = new AbstractSyntaxTree(lexeme, next.getNode(), null);
+
+                final var newLexeme = new Lexeme(types.get(lexeme.getType().tokenClass.symbol));
+                var node = new AbstractSyntaxTree(newLexeme, next.getNode(), null);
                 result.add(new TokenWrapper(node));
             } catch (IndexOutOfBoundsException e) {
                 throw new ExpressionParseException("Operand not found");

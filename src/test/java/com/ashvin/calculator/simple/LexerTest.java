@@ -42,7 +42,7 @@ class LexerTest {
     }
 
     @Test
-    void goodMinus_before() {
+    void unaryMinus() {
         final var str = "-3";
         final var expect = List.of(
                 new Lexeme(TokenType.MINUS, null),
@@ -53,7 +53,7 @@ class LexerTest {
     }
 
     @Test
-    void plusBeforeNumber() {
+    void unaryPlus() {
         final var str = "+3";
         final var expect = List.of(
                 new Lexeme(TokenType.PLUS, null),
