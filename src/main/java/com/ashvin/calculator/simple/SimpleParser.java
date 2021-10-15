@@ -6,7 +6,6 @@ import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.ExpressionParseException;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -93,15 +92,15 @@ public class SimpleParser implements Parser {
         if (tokens.get(idx).getLexeme().getType() != TokenType.OPEN_PARENS)
             throw new IllegalArgumentException("Token at idx %s is not open parenthesis".formatted(idx));
 
-        var stack = new ArrayDeque<TokenWrapper>(tokens.size());
+        var balance = 0;
         for (int i = idx + 1; i < tokens.size(); i++) {
             final var token = tokens.get(i);
             final var lexeme = token.getLexeme();
             if (lexeme.getType().equals(TokenType.OPEN_PARENS)) {
-                stack.addFirst(token);
+                balance++;
             } else if (lexeme.getType().equals(TokenType.CLOSE_PARENS)) {
-                if (stack.isEmpty()) return i;
-                else stack.poll();
+                if (balance == 0) return i;
+                else balance--;
             }
         }
         throw new IllegalArgumentException("No matching parenthesis found");
@@ -197,9 +196,9 @@ public class SimpleParser implements Parser {
 
             if (i > 0) {
                 var prev = tokens.get(i - 1);
-                // if previous element is a number then its a binary operator
                 if (prev.isLexeme()) {
                     final var prevLexeme = prev.getLexeme();
+                    // if previous element is a number then its a binary operator
                     if (prevLexeme.getType() == TokenType.NUMBER) {
                         result.add(current);
                         continue;

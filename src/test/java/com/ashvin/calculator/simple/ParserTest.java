@@ -44,9 +44,11 @@ class ParserTest {
     @Test
     @DisplayName("parsePlusBeforeNumber")
     void parsePlusBeforeNumber() throws ExpressionParseException {
-        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.U_PLUS),
-                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3"))
-                , null);
+        final var expect = new AbstractSyntaxTree(
+                new Lexeme(TokenType.U_PLUS),
+                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
+                null
+        );
         final var str = "+3";
         final var lexemes = lexer.tokenize(str);
         final var got = parser.parse(lexemes);
@@ -69,9 +71,11 @@ class ParserTest {
     @DisplayName("simple sin test")
     void simpleSinTest() {
         final var str = "s3";
-        final var expected = new AbstractSyntaxTree(new Lexeme(TokenType.SIN),
+        final var expected = new AbstractSyntaxTree(
+                new Lexeme(TokenType.SIN),
                 new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
-                null);
+                null
+        );
 
         parse(expected, str);
     }
@@ -79,9 +83,11 @@ class ParserTest {
     @Test
     @DisplayName("Parse simple unary expression")
     void parseSimpleUnaryExpression() throws ExpressionParseException {
-        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
-                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3"))
-                , null);
+        final var expect = new AbstractSyntaxTree(
+                new Lexeme(TokenType.U_MINUS),
+                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
+                null
+        );
         final var str = "-3";
         final var lexemes = lexer.tokenize(str);
         final var got = parser.parse(lexemes);
@@ -110,23 +116,36 @@ class ParserTest {
         expectThrow(str, ExpressionParseException.class);
     }
 
+    /*
+     *                            +
+     *                           / \
+     *                          -   /
+     *                         /   /  \
+     *                        3   *    -
+     *                           / \  /
+     *                          5  8 2
+     * */
     @Test
     @DisplayName("Parse complex expression")
     void parseComplexExpression() throws ExpressionParseException {
-        final var expected = new AbstractSyntaxTree(new Lexeme(TokenType.PLUS),
-                new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
+        final var expected = new AbstractSyntaxTree(
+                new Lexeme(TokenType.PLUS),
+                new AbstractSyntaxTree(
+                        new Lexeme(TokenType.U_MINUS),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
                         null
-                ), new AbstractSyntaxTree(new Lexeme(TokenType.SLASH),
-                new AbstractSyntaxTree(new Lexeme(TokenType.ASTERISK),
-                        new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "5")),
-                        new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "8"))
                 ),
-                new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
-                        new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "2")),
-                        null
+                new AbstractSyntaxTree(new Lexeme(TokenType.SLASH),
+                        new AbstractSyntaxTree(new Lexeme(TokenType.ASTERISK),
+                                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "5")),
+                                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "8"))
+                        ),
+                        new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
+                                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "2")),
+                                null
+                        )
                 )
-        ));
+        );
         final var str = "-3 +5 * 8 / -2";
         parse(expected, str);
     }
@@ -135,6 +154,5 @@ class ParserTest {
     @DisplayName("Expression ends with operator")
     void expressionEndsWithOperator() {
         final var str = "-3 +5 * 8 / -2 -";
-        expectThrow(str, IndexOutOfBoundsException.class);
-    }
+        expectThrow(str, IndexOutOfBoundsException.class);    }
 }

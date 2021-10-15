@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static com.ashvin.calculator.entity.TokenType.*;
+
 class LexerTest {
     final static Lexer lexer = new SimpleLexer();
 
@@ -21,9 +23,9 @@ class LexerTest {
     void goodAdd() {
         final var str = "3+ 5";
         final var expect = List.of(
-                new Lexeme(TokenType.NUMBER, "3"),
-                new Lexeme(TokenType.PLUS),
-                new Lexeme(TokenType.NUMBER, "5")
+                new Lexeme(NUMBER, "3"),
+                new Lexeme(PLUS),
+                new Lexeme(NUMBER, "5")
         );
 
         tokenizeTest(str, expect);
@@ -33,9 +35,9 @@ class LexerTest {
     void goodMinus() {
         final var str = "3-5 ";
         final var expect = List.of(
-                new Lexeme(TokenType.NUMBER, "3"),
-                new Lexeme(TokenType.MINUS),
-                new Lexeme(TokenType.NUMBER, "5")
+                new Lexeme(NUMBER, "3"),
+                new Lexeme(MINUS),
+                new Lexeme(NUMBER, "5")
         );
 
         tokenizeTest(str, expect);
@@ -45,8 +47,8 @@ class LexerTest {
     void unaryMinus() {
         final var str = "-3";
         final var expect = List.of(
-                new Lexeme(TokenType.MINUS, null),
-                new Lexeme(TokenType.NUMBER, "3")
+                new Lexeme(MINUS, null),
+                new Lexeme(NUMBER, "3")
         );
 
         tokenizeTest(str, expect);
@@ -56,8 +58,8 @@ class LexerTest {
     void unaryPlus() {
         final var str = "+3";
         final var expect = List.of(
-                new Lexeme(TokenType.PLUS, null),
-                new Lexeme(TokenType.NUMBER, "3")
+                new Lexeme(PLUS, null),
+                new Lexeme(NUMBER, "3")
         );
 
         tokenizeTest(str, expect);
@@ -67,8 +69,8 @@ class LexerTest {
     void mathSin() {
         final var str = "s3";
         final var expect = List.of(
-                new Lexeme(TokenType.SIN),
-                new Lexeme(TokenType.NUMBER, "3")
+                new Lexeme(SIN),
+                new Lexeme(NUMBER, "3")
         );
 
         tokenizeTest(str, expect);
@@ -78,9 +80,9 @@ class LexerTest {
     void goodMultiply() {
         final var str = " 3*5";
         final var expect = List.of(
-                new Lexeme(TokenType.NUMBER, "3"),
-                new Lexeme(TokenType.ASTERISK),
-                new Lexeme(TokenType.NUMBER, "5")
+                new Lexeme(NUMBER, "3"),
+                new Lexeme(ASTERISK),
+                new Lexeme(NUMBER, "5")
         );
 
         tokenizeTest(str, expect);
@@ -90,9 +92,9 @@ class LexerTest {
     void goodDivision() {
         final var str = "3 /5";
         final var expect = List.of(
-                new Lexeme(TokenType.NUMBER, "3"),
-                new Lexeme(TokenType.SLASH),
-                new Lexeme(TokenType.NUMBER, "5")
+                new Lexeme(NUMBER, "3"),
+                new Lexeme(SLASH),
+                new Lexeme(NUMBER, "5")
         );
 
         tokenizeTest(str, expect);
@@ -105,12 +107,18 @@ class LexerTest {
     }
 
     @Test
+    void multipleDecimal() {
+        final var str = "3.23.4";
+        Assertions.assertThrows(IllegalTokenException.class, () -> lexer.tokenize(str));
+    }
+
+    @Test
     void goodCaret() {
         final var str = "3 ^ 2";
         final var expected = List.of(
-                new Lexeme(TokenType.NUMBER, "3"),
-                new Lexeme(TokenType.CARET),
-                new Lexeme(TokenType.NUMBER, "2")
+                new Lexeme(NUMBER, "3"),
+                new Lexeme(CARET),
+                new Lexeme(NUMBER, "2")
         );
         tokenizeTest(str, expected);
     }
@@ -119,11 +127,11 @@ class LexerTest {
     void goodParens() {
         final var str = "(3 ^ 2)";
         final var expected = List.of(
-                new Lexeme(TokenType.OPEN_PARENS),
-                new Lexeme(TokenType.NUMBER, "3"),
-                new Lexeme(TokenType.CARET),
-                new Lexeme(TokenType.NUMBER, "2"),
-                new Lexeme(TokenType.CLOSE_PARENS)
+                new Lexeme(OPEN_PARENS),
+                new Lexeme(NUMBER, "3"),
+                new Lexeme(CARET),
+                new Lexeme(NUMBER, "2"),
+                new Lexeme(CLOSE_PARENS)
         );
         tokenizeTest(str, expected);
     }

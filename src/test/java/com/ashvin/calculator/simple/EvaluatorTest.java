@@ -85,4 +85,12 @@ class EvaluatorTest {
 
         Assertions.assertEquals(expected, got);
     }
+
+    @Test
+    @DisplayName("Parenthesis eval")
+    void evalParenExpression() {
+        final var str = "(";
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> evaluate(str));
+    }
 }
