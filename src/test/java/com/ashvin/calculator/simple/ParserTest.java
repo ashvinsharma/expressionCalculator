@@ -23,6 +23,12 @@ class ParserTest {
         lexer = new SimpleLexer();
     }
 
+    private void parse(AbstractSyntaxTree expected, String str) {
+        final var lexemes = lexer.tokenize(str);
+        final var got = parser.parse(lexemes);
+        Assertions.assertEquals(expected, got);
+    }
+
     private void expectThrow(String str, Class<? extends Throwable> e) {
         final var lexemes = lexer.tokenize(str);
         Assertions.assertThrows(e, () -> parser.parse(lexemes));
@@ -59,6 +65,16 @@ class ParserTest {
         Assertions.assertEquals(expect, got);
     }
 
+    @Test
+    @DisplayName("simple sin test")
+    void simpleSinTest() {
+        final var str = "s3";
+        final var expected = new AbstractSyntaxTree(new Lexeme(TokenType.SIN),
+                new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
+                null);
+
+        parse(expected, str);
+    }
 
     @Test
     @DisplayName("Parse simple unary expression")
@@ -112,9 +128,7 @@ class ParserTest {
                 )
         ));
         final var str = "-3 +5 * 8 / -2";
-        final var lexemes = lexer.tokenize(str);
-        final var got = parser.parse(lexemes);
-        Assertions.assertEquals(expected, got);
+        parse(expected, str);
     }
 
     @Test

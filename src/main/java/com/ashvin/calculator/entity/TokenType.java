@@ -6,6 +6,7 @@ import com.ashvin.calculator.entity.TokenClass.Minus;
 import com.ashvin.calculator.entity.TokenClass.Number;
 import com.ashvin.calculator.entity.TokenClass.Parenthesis;
 import com.ashvin.calculator.entity.TokenClass.Plus;
+import com.ashvin.calculator.entity.TokenClass.Sin;
 import com.ashvin.calculator.entity.TokenClass.Slash;
 
 import java.math.BigDecimal;
@@ -20,7 +21,8 @@ public enum TokenType {
     SLASH(new Slash(20, 2, '/')),
     CARET(new Caret(30, 2, '^')),
     OPEN_PARENS(new Parenthesis('(')),
-    CLOSE_PARENS(new Parenthesis(')'));
+    CLOSE_PARENS(new Parenthesis(')')),
+    SIN(new Sin(90, 1, 's'));
 
     private final TokenClass tokenClass;
 

@@ -1,6 +1,7 @@
 package com.ashvin.calculator.entity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static java.lang.String.format;
 
@@ -8,11 +9,13 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
     private final int priority;
     private final int numOperands;
     private final char symbol;
+    private final int scale;
 
     public TokenClass(int priority, int numOperands, char symbol) {
         this.priority = priority;
         this.numOperands = numOperands;
         this.symbol = symbol;
+        this.scale = Integer.parseInt(System.getProperty("decimal.scale", "3"));
     }
 
     public void validate(BigDecimal... bigDecimals) {
@@ -21,6 +24,10 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
                     format("Only %s arguments needed, got %s", numOperands, bigDecimals.length)
             );
         }
+    }
+
+    public int getScale() {
+        return scale;
     }
 
     @Override
@@ -110,8 +117,7 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
             final var right = bigDecimals[1];
             if (right == null || right.equals(BigDecimal.ZERO))
                 throw new IllegalStateException("Unexpected value: " + right);
-            //noinspection BigDecimalMethodWithoutRoundingCalled
-            return left.divide(right);
+            return left.divide(right, super.getScale(), RoundingMode.HALF_EVEN);
         }
     }
 
@@ -138,6 +144,23 @@ public abstract class TokenClass implements Token, Comparable<TokenClass> {
             final var right = bigDecimals[1];
             final var rightInt = Integer.parseInt(right.toString());
             return left.pow(rightInt);
+        }
+    }
+
+    static class Sin extends TokenClass implements Token {
+
+        public Sin(int priority, int numOperands, char symbol) {
+            super(priority, numOperands, symbol);
+        }
+
+        @Override
+        public BigDecimal eval(final BigDecimal... bigDecimals) {
+            super.validate(bigDecimals);
+            final var left = bigDecimals[0];
+
+            final var result = Math.sin(left.doubleValue());
+            final var bigDecimal = BigDecimal.valueOf(result);
+            return bigDecimal.setScale(super.getScale(), RoundingMode.HALF_EVEN);
         }
     }
 }

@@ -64,6 +64,17 @@ class LexerTest {
     }
 
     @Test
+    void mathSin() {
+        final var str = "s3";
+        final var expect = List.of(
+                new Lexeme(TokenType.SIN),
+                new Lexeme(TokenType.NUMBER, "3")
+        );
+
+        tokenizeTest(str, expect);
+    }
+
+    @Test
     void goodMultiply() {
         final var str = " 3*5";
         final var expect = List.of(
