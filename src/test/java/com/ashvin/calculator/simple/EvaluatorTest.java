@@ -45,4 +45,24 @@ class EvaluatorTest {
 
         Assertions.assertEquals(expected, got);
     }
+
+    @Test
+    @DisplayName("Simple Parenthesised Expression")
+    void simpleParenthesisedExpression() throws EvalException {
+        final var str = "(5 + 2) / 7";
+        final var expected = new BigDecimal(1);
+        final var got = evaluate(str);
+
+        Assertions.assertEquals(expected, got);
+    }
+
+    @Test
+    @DisplayName("Complex Parenthesised Expression")
+    void complexParenthesisedExpression() throws EvalException {
+        final var str = "(5 + (2 * 2)) / (11 + (-2))";
+        final var expected = new BigDecimal(1);
+        final var got = evaluate(str);
+
+        Assertions.assertEquals(expected, got);
+    }
 }

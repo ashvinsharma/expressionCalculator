@@ -1,8 +1,7 @@
 package com.ashvin.calculator.simple;
 
-import com.ashvin.calculator.*;
+import com.ashvin.calculator.Evaluator;
 import com.ashvin.calculator.entity.AbstractSyntaxTree;
-import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.EvalException;
 
@@ -20,20 +19,9 @@ public class SimpleEvaluator implements Evaluator {
             BigDecimal left = node.getLeft() != null ? evaluate(node.getLeft()) : null;
             BigDecimal right = node.getRight() != null ? evaluate(node.getRight()) : null;
 
-            // noinspection ConstantConditions
-            return evaluate(left, lexeme, right);
-        } catch (NumberFormatException e) {
-            throw new EvalException("Invalid number specified");
-        } catch (EvalException e) {
-            throw e;
+            return lexeme.eval(left, right);
         } catch (Exception e) {
-            throw new EvalException("Evaluation of expression failed");
+            throw new EvalException(e);
         }
-    }
-
-    private BigDecimal evaluate(BigDecimal left, Lexeme lexeme, BigDecimal right) {
-        // if left is null, right is guaranteed to be null
-        // so only check for right
-        return lexeme.eval(left, right);
     }
 }

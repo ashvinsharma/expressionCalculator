@@ -6,7 +6,11 @@ import com.ashvin.calculator.entity.AbstractSyntaxTree;
 import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.ExpressionParseException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ParserTest {
@@ -34,10 +38,21 @@ class ParserTest {
     @Test
     @DisplayName("parsePlusBeforeNumber")
     void parsePlusBeforeNumber() throws ExpressionParseException {
-        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.PLUS),
+        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.U_PLUS),
                 new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3"))
                 , null);
         final var str = "+3";
+        final var lexemes = lexer.tokenize(str);
+        final var got = parser.parse(lexemes);
+
+        Assertions.assertEquals(expect, got);
+    }
+
+    @Test
+    @DisplayName("Simple parenthesised expression")
+    void simpleParenthesisedExp() throws ExpressionParseException {
+        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "5"));
+        final var str = "(5)";
         final var lexemes = lexer.tokenize(str);
         final var got = parser.parse(lexemes);
 
@@ -48,7 +63,7 @@ class ParserTest {
     @Test
     @DisplayName("Parse simple unary expression")
     void parseSimpleUnaryExpression() throws ExpressionParseException {
-        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.MINUS),
+        final var expect = new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
                 new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3"))
                 , null);
         final var str = "-3";
@@ -83,7 +98,7 @@ class ParserTest {
     @DisplayName("Parse complex expression")
     void parseComplexExpression() throws ExpressionParseException {
         final var expected = new AbstractSyntaxTree(new Lexeme(TokenType.PLUS),
-                new AbstractSyntaxTree(new Lexeme(TokenType.MINUS),
+                new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "3")),
                         null
                 ), new AbstractSyntaxTree(new Lexeme(TokenType.SLASH),
@@ -91,7 +106,7 @@ class ParserTest {
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "5")),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "8"))
                 ),
-                new AbstractSyntaxTree(new Lexeme(TokenType.MINUS),
+                new AbstractSyntaxTree(new Lexeme(TokenType.U_MINUS),
                         new AbstractSyntaxTree(new Lexeme(TokenType.NUMBER, "2")),
                         null
                 )

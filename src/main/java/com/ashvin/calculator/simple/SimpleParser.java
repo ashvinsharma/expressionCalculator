@@ -6,29 +6,108 @@ import com.ashvin.calculator.entity.Lexeme;
 import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.ExpressionParseException;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SimpleParser implements Parser {
     @Override
     public AbstractSyntaxTree parse(List<Lexeme> lexemes) throws ExpressionParseException {
-        var tokens = lexemes
+        final var tokens = lexemes
                 .stream()
                 .map(TokenWrapper::new)
                 .collect(Collectors.toList());
-        tokens = processUnaryOperators(tokens, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
-        tokens = processBinaryOperators(tokens, EnumSet.of(TokenType.ASTERISK, TokenType.SLASH));
-        tokens = processBinaryOperators(tokens, EnumSet.of(TokenType.PLUS, TokenType.MINUS));
 
+        parseTokens(tokens);
         if (tokens.size() != 1) throw new ExpressionParseException("Failed to parse all or some parts of expression");
-        var wrapper = tokens.get(0);
+        final var wrapper = tokens.get(0);
+
         return wrapper.getNode();
     }
 
-    private List<TokenWrapper> processBinaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+    private List<TokenWrapper> parseTokens(List<TokenWrapper> tokens) {
+        processParens(tokens);
+
+        processUnaryOperators(tokens, EnumSet.allOf(TokenType.class)
+                .stream()
+                .filter(x -> x != TokenType.NUMBER)
+                .filter(x -> x.getTokenClass().getNumOperands() == 1)
+                .collect(Collectors.toMap(x -> x.getTokenClass().getSymbol(), Function.identity())));
+
+//        filter binary operators then sort then group them by priority in a set
+//        20 -> [ASTERISK, SLASH]
+//        10 -> [PLUS, MINUS]
+//        then process
+        EnumSet.allOf(TokenType.class)
+                .stream()
+                .filter(x -> x.getTokenClass().getNumOperands() == 2)
+                .sorted((o1, o2) -> o2.compare(o1))
+                .collect(
+                        Collectors.groupingBy((x -> x.getTokenClass().getPriority()),
+                                LinkedHashMap::new,
+                                Collectors.toSet()))
+                .forEach((key, val) -> processBinaryOperators(tokens, val));
+
+        return tokens;
+    }
+
+    // recursively solves inner parenthesised expression first
+    // 1 + 9 * 8 + ( 8 * 9 + ( 8 / 1 ))
+    // 8 * 9 + ( 8 / 1 )
+    // 8 / 1
+    private void processParens(List<TokenWrapper> tokens) {
+        final var tmp = new ArrayList<TokenWrapper>(tokens.size() * 2);
+        for (int i = 0; i < tokens.size(); i++) {
+            final var token = tokens.get(i);
+            if (!token.isLexeme()) {
+                tmp.add(token);
+                continue;
+            }
+            if (token.getLexeme().getType().equals(TokenType.OPEN_PARENS)) {
+                final var idx = findMatchingParen(tokens, i);
+                tmp.addAll(parseTokens(new ArrayList<>(tokens.subList(i + 1, idx))));
+                i = idx;
+            } else {
+                tmp.add(token);
+            }
+        }
+        tokens.clear();
+        tokens.addAll(tmp);
+    }
+
+    /**
+     * Returns idx of matching parens
+     *
+     * @param tokens - list of {@link TokenWrapper}
+     * @param idx - index of the matching closing parenthesis
+     */
+    private int findMatchingParen(List<TokenWrapper> tokens, int idx) {
+        if (!tokens.get(idx).isLexeme())
+            throw new IllegalArgumentException("Token at idx %s is not Lexeme".formatted(idx));
+        if (tokens.get(idx).getLexeme().getType() != TokenType.OPEN_PARENS)
+            throw new IllegalArgumentException("Token at idx %s is not open parenthesis".formatted(idx));
+
+        var stack = new ArrayDeque<TokenWrapper>(tokens.size());
+        for (int i = idx + 1; i < tokens.size(); i++) {
+            final var token = tokens.get(i);
+            final var lexeme = token.getLexeme();
+            if (lexeme.getType().equals(TokenType.OPEN_PARENS)) {
+                stack.addFirst(token);
+            } else if (lexeme.getType().equals(TokenType.CLOSE_PARENS)) {
+                if (stack.isEmpty()) return i;
+                else stack.poll();
+            }
+        }
+        throw new IllegalArgumentException("No matching parenthesis found");
+    }
+
+    private void processBinaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
             throws ExpressionParseException {
         final var result = new ArrayList<TokenWrapper>();
         AbstractSyntaxTree node = null;
@@ -94,24 +173,25 @@ public class SimpleParser implements Parser {
             result.add(new TokenWrapper(node));
         }
 
-        return result;
+        tokens.clear();
+        tokens.addAll(result);
     }
 
-    private List<TokenWrapper> processUnaryOperators(List<TokenWrapper> tokens, Set<TokenType> types)
+    private void processUnaryOperators(List<TokenWrapper> tokens, Map<Character, TokenType> types)
             throws ExpressionParseException {
         final var result = new ArrayList<TokenWrapper>();
 
         for (int i = 0; i < tokens.size(); i++) {
-            var wrapper = tokens.get(i);
+            final var current = tokens.get(i);
             // dont touch AST
-            if (!wrapper.isLexeme()) {
-                result.add(wrapper);
+            if (!current.isLexeme()) {
+                result.add(current);
                 continue;
             }
 
-            final var lexeme = wrapper.getLexeme();
-            if (!types.contains(lexeme.getType())) {
-                result.add(wrapper);
+            final var lexeme = current.getLexeme();
+            if (!types.containsKey(lexeme.getType().getTokenClass().getSymbol())) {
+                result.add(current);
                 continue;
             }
 
@@ -121,11 +201,11 @@ public class SimpleParser implements Parser {
                 if (prev.isLexeme()) {
                     final var prevLexeme = prev.getLexeme();
                     if (prevLexeme.getType() == TokenType.NUMBER) {
-                        result.add(wrapper);
+                        result.add(current);
                         continue;
                     }
                 } else {
-                    result.add(wrapper);
+                    result.add(current);
                     continue;
                 }
             }
@@ -138,7 +218,9 @@ public class SimpleParser implements Parser {
                     if (nextLexeme.getType() != TokenType.NUMBER)
                         throw new ExpressionParseException("Expected a number");
                 }
-                var node = new AbstractSyntaxTree(lexeme, next.getNode(), null);
+
+                final var newLexeme = new Lexeme(types.get(lexeme.getType().getTokenClass().getSymbol()));
+                var node = new AbstractSyntaxTree(newLexeme, next.getNode(), null);
                 result.add(new TokenWrapper(node));
             } catch (IndexOutOfBoundsException e) {
                 throw new ExpressionParseException("Operand not found");
@@ -146,7 +228,8 @@ public class SimpleParser implements Parser {
 
             i++;
         }
-        return result;
+        tokens.clear();
+        tokens.addAll(result);
     }
 
     private static class TokenWrapper {

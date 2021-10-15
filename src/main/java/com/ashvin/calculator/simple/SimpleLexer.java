@@ -6,6 +6,7 @@ import com.ashvin.calculator.entity.TokenType;
 import com.ashvin.calculator.exception.IllegalTokenException;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 public class SimpleLexer implements Lexer {
@@ -29,13 +30,13 @@ public class SimpleLexer implements Lexer {
 
             if (curr == ' ') continue;
 
-            Lexeme lexeme = switch (curr) {
-                case '+' -> new Lexeme(TokenType.PLUS);
-                case '-' -> new Lexeme(TokenType.MINUS);
-                case '*' -> new Lexeme(TokenType.ASTERISK);
-                case '/' -> new Lexeme(TokenType.SLASH);
-                default -> throw new IllegalTokenException(curr);
-            };
+            final var lexeme = EnumSet
+                    .allOf(TokenType.class)
+                    .stream()
+                    .filter(x -> x.getTokenClass().getSymbol() == curr)
+                    .findFirst()
+                    .map(Lexeme::new)
+                    .orElseThrow(() -> new IllegalTokenException(curr));
 
             lexemes.add(lexeme);
         }

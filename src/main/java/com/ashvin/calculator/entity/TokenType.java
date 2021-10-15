@@ -1,37 +1,42 @@
 package com.ashvin.calculator.entity;
 
+import com.ashvin.calculator.entity.TokenClass.Asterisk;
+import com.ashvin.calculator.entity.TokenClass.Caret;
+import com.ashvin.calculator.entity.TokenClass.Minus;
+import com.ashvin.calculator.entity.TokenClass.Number;
+import com.ashvin.calculator.entity.TokenClass.Parenthesis;
+import com.ashvin.calculator.entity.TokenClass.Plus;
+import com.ashvin.calculator.entity.TokenClass.Slash;
+
 import java.math.BigDecimal;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public enum TokenType {
-    NUMBER((left) -> left),
-    PLUS((left, right) -> right == null ? left : left.add(right)),
-    MINUS((left, right) -> right == null ? left.negate() : left.subtract(right)),
-    ASTERISK((left, right) -> right == null ? left : left.multiply(right)),
-    SLASH((left, right) -> {
-        if (right == null || right.equals(BigDecimal.ZERO))
-            throw new IllegalStateException("Unexpected value: " + right);
-        //noinspection BigDecimalMethodWithoutRoundingCalled
-        return left.divide(right);
-    });
+    NUMBER(new Number(Integer.MAX_VALUE, 1, 'x')),
+    PLUS(new Plus(10, 2, '+')),
+    U_PLUS(new Plus(100, 1, '+')),
+    MINUS(new Minus(10, 2, '-')),
+    U_MINUS(new Minus(100, 1, '-')),
+    ASTERISK(new Asterisk(20, 2, '*')),
+    SLASH(new Slash(20, 2, '/')),
+    CARET(new Caret(30, 2, '^')),
+    OPEN_PARENS(new Parenthesis('(')),
+    CLOSE_PARENS(new Parenthesis(')'));
 
-    private BiFunction<BigDecimal, BigDecimal, BigDecimal> biFunction;
-    private Function<BigDecimal, BigDecimal> function;
+    private final TokenClass tokenClass;
 
-    TokenType(BiFunction<BigDecimal, BigDecimal, BigDecimal> function) {
-        this.biFunction = function;
+    TokenType(TokenClass tokenClass) {
+        this.tokenClass = tokenClass;
     }
 
-    TokenType(Function<BigDecimal, BigDecimal> f) {
-        this.function = f;
+    BigDecimal eval(BigDecimal... operands) {
+        return tokenClass.eval(operands);
     }
 
-    BigDecimal eval(BigDecimal left, BigDecimal right) {
-        return biFunction.apply(left, right);
+    public int compare(TokenType that) {
+        return this.tokenClass.compareTo(that.tokenClass);
     }
 
-    BigDecimal eval(BigDecimal left) {
-        return function.apply(left);
+    public TokenClass getTokenClass() {
+        return tokenClass;
     }
 }

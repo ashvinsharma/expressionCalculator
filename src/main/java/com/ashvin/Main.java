@@ -27,7 +27,7 @@ public class Main {
             }
             try {
                 System.out.println(calc.calculate());
-            } catch (EvalException e) {
+            } catch (Exception e) {
                 System.err.printf("FATAL! Computation failed!\n%s\n", e.getMessage());
             }
         }

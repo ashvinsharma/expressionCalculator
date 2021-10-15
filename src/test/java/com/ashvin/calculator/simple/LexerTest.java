@@ -42,7 +42,7 @@ class LexerTest {
     }
 
     @Test
-    void goodMinus_before() {
+    void unaryMinus() {
         final var str = "-3";
         final var expect = List.of(
                 new Lexeme(TokenType.MINUS, null),
@@ -53,7 +53,7 @@ class LexerTest {
     }
 
     @Test
-    void plusBeforeNumber() {
+    void unaryPlus() {
         final var str = "+3";
         final var expect = List.of(
                 new Lexeme(TokenType.PLUS, null),
@@ -91,5 +91,29 @@ class LexerTest {
     void badCharacter() {
         final var str = "3a + 5a";
         Assertions.assertThrows(IllegalTokenException.class, () -> lexer.tokenize(str));
+    }
+
+    @Test
+    void goodCaret() {
+        final var str = "3 ^ 2";
+        final var expected = List.of(
+                new Lexeme(TokenType.NUMBER, "3"),
+                new Lexeme(TokenType.CARET),
+                new Lexeme(TokenType.NUMBER, "2")
+        );
+        tokenizeTest(str, expected);
+    }
+
+    @Test
+    void goodParens() {
+        final var str = "(3 ^ 2)";
+        final var expected = List.of(
+                new Lexeme(TokenType.OPEN_PARENS),
+                new Lexeme(TokenType.NUMBER, "3"),
+                new Lexeme(TokenType.CARET),
+                new Lexeme(TokenType.NUMBER, "2"),
+                new Lexeme(TokenType.CLOSE_PARENS)
+        );
+        tokenizeTest(str, expected);
     }
 }
