@@ -103,4 +103,17 @@ class LexerTest {
         );
         tokenizeTest(str, expected);
     }
+
+    @Test
+    void goodParens() {
+        final var str = "(3 ^ 2)";
+        final var expected = List.of(
+                new Lexeme(TokenType.OPEN_PARENS),
+                new Lexeme(TokenType.NUMBER, "3"),
+                new Lexeme(TokenType.CARET),
+                new Lexeme(TokenType.NUMBER, "2"),
+                new Lexeme(TokenType.CLOSE_PARENS)
+        );
+        tokenizeTest(str, expected);
+    }
 }

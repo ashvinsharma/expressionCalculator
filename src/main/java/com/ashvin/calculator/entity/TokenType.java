@@ -4,6 +4,7 @@ import com.ashvin.calculator.entity.TokenClass.Asterisk;
 import com.ashvin.calculator.entity.TokenClass.Caret;
 import com.ashvin.calculator.entity.TokenClass.Minus;
 import com.ashvin.calculator.entity.TokenClass.Number;
+import com.ashvin.calculator.entity.TokenClass.Parenthesis;
 import com.ashvin.calculator.entity.TokenClass.Plus;
 import com.ashvin.calculator.entity.TokenClass.Slash;
 
@@ -17,9 +18,11 @@ public enum TokenType {
     U_MINUS(new Minus(100, 1, '-')),
     ASTERISK(new Asterisk(20, 2, '*')),
     SLASH(new Slash(20, 2, '/')),
-    CARET(new Caret(30, 2, '^'));
+    CARET(new Caret(30, 2, '^')),
+    OPEN_PARENS(new Parenthesis('(')),
+    CLOSE_PARENS(new Parenthesis(')'));
 
-    public TokenClass tokenClass;
+    private final TokenClass tokenClass;
 
     TokenType(TokenClass tokenClass) {
         this.tokenClass = tokenClass;
@@ -32,8 +35,8 @@ public enum TokenType {
     public int compare(TokenType that) {
         return this.tokenClass.compareTo(that.tokenClass);
     }
-}
 
-// 1 + 9 * 8 + ( 8 * 9 + ( 8 / 1 ))
-// 8 * 9 + ( 8 / 1 )
-// 8 / 1
+    public TokenClass getTokenClass() {
+        return tokenClass;
+    }
+}
